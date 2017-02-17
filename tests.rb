@@ -54,7 +54,7 @@ class ApplicationTest < Minitest::Test
 
   def test_term_cannot_be_deleted_with_courses
     term = Term.create(name: "Fall Term")
-    Course.create(name: "Coding 101", term_id: term.id)
+    Course.create(name: "Coding 101", term_id: term.id, course_code: "C101")
     refute term.destroy
     assert term.errors.full_messages.include? "Cannot delete record because dependent courses exist"
   end
@@ -66,7 +66,7 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_courses_cannot_be_deleted_with_students_in_them
-    course = Course.create(name: "Test Class")
+    course = Course.create(name: "Test Class", course_code: "T200")
     CourseStudent.create(course_id: course.id)
     refute course.destroy
     assert course.errors.full_messages.include? "Cannot delete record because dependent course students exist"
@@ -79,7 +79,7 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_assignment_deleted_with_courses
-    course = Course.create(name: "Tested Class")
+    course = Course.create(name: "Tested Class", course_code: "TC101")
     Assignment.create(name: "Bullshit", course_id: course.id)
     course.destroy
     refute Assignment.exists?(name: "Bullshit")
@@ -97,23 +97,64 @@ class ApplicationTest < Minitest::Test
     assert_equal "Ruby", assign.lessons.first.name
   end
 
-  def test_school_can_have_many_terms
+  def test_school_can_have_many_courses_through_terms
     tiy = School.create(name: "TIY")
     fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
     winter = Term.create(name: "Winter", starts_on: 20160101, ends_on: 20160331, school_id: tiy.id)
-    ruby = Course.create(name: "Course", term_id: fall.id)
-    js = Course.create(name: "JavaScript", term_id: fall.id)
-    c = Course.create(name: "C", term_id: winter.id)
-    rails = Course.create(name: "Rails", term_id: winter.id)
+    ruby = Course.create(name: "Course", term_id: fall.id, course_code: "CO")
+    js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE")
+    c = Course.create(name: "C", term_id: winter.id, course_code: "CEE")
+    rails = Course.create(name: "Rails", term_id: winter.id, course_code: "BEE")
     assert tiy.terms.count > 1
-    assert fall.courses.count > 1
-    assert winter.courses.count > 1
+    assert tiy.courses.count > 1
+    assert_equal "TIY", rails.schools.first.name
   end
 
-  def test_terms_can_have_multiple_courses
+  def test_school_name_is_required
+    school = School.new
+    refute school.save
+    assert school.errors.full_messages.include? "Name can't be blank"
+  end
+
+  def test_lessons_name_is_required
+    lesson = Lesson.new
+    refute lesson.save
+    assert lesson.errors.full_messages.include? "Name can't be blank"
+  end
+
+  def test_reading_requires_stuff
+    read = Reading.new
+    refute read.save
+    assert read.errors.full_messages.include? "Order number can't be blank"
+  end
+
+  def test_reading_url_starts_with_http
+    read = Reading.new(url: "www.google.com")
+    refute read.save
+    assert read.errors.full_messages.include? "Url is invalid"
+  end
+
+  def test_course_requires_code_and_name
+    course = Course.new
+    refute course.save
+    assert course.errors.full_messages.include? "Name can't be blank"
+    assert course.errors.full_messages.include? "Course code can't be blank"
 
   end
 
+  def test_course_code_is_unique_in_term
+    tiy = School.create(name: "TIY")
+    fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
+    ruby = Course.create(name: "Course", term_id: fall.id, course_code: "F1")
+    assert ruby.save
+    js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "F1")
+    refute js.save
+    assert 
+
+
+
+
+  end
 
 
 
