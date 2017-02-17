@@ -144,30 +144,35 @@ end
 # Explorer Player B Step 4 - Associate lessons with their in_class_assignments
 # (both directions)
 # Note:  lessons table has an in_class_assignments_id
-#        and a pre_class_assignment_id    scope?
-# assignments have a course_id
-# lessons have a course_id
-#-------------------------------------------------------------
-#  Item has_many :users, through: :orders
-#  leaving with testing in lessons
-#rb Try 'has_many :assignments, :through => :course, :source => <name>'. Is it one of lessons or course_instructors?
-#          has_many :assignments, through: :courses
-# So testing that if I create a new assignment with course id 100
-# and a new lesson that has course id 100
-# if I create a in_class_assignment I can
-#     get to it from
-#   xxx   has_many :y, through:   :z
-#   assert x.y
+#        and a pre_class_assignment_id.  Both are foreign key relationships
+#        with a non-standard name
 #
-def test_lessons_through_courses_get_assignment_and_vice_versa
-  new_course = Course.create( name: "Course710" )
-  new_assignment = Assignment.create( name: "In Class", course_id: new_course.id)
-  new_lesson = Lesson.create(course_id: new_course.id, in_class_assignment_id:  new_assignment.id )
-binding.pry
-  assert new_lesson.assignments
+# Web Example:
+# belongs_to :author, class_name: "Patron",
+#                        foreign_key: "patron_id"
+#
+#
+#
+#-------------------------------------------------------------
+
+def test_lessons_foreign_key_in_class_assignment
+  new_assignment = Assignment.create( name: "Assignment with In Class")
+  new_lesson = Lesson.create(in_class_assignment_id:  new_assignment.id )
+  assert new_lesson.settergetter_in_class_assignment
+
+  # for a lesson, should be able to get the assignment represented by
+  #     in_class_assignment_id
+  # for an assignment, should be able to find for what all lessons
+  #        have it as an in_class_assignment_id
+  #
 end
 
-#Try 'has_many :assignments, :through => :course, :source => <name>'. Is it one of lessons or course_instructors?
+# def test_in_class_assignment_id_exists_in_assignment
+#     new_lesson = Lesson.create
+#
+#
+# end
+
 
 
 end # end ApplicationTest < Minitest::Test

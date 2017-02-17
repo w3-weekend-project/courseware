@@ -1,8 +1,10 @@
 class Lesson < ActiveRecord::Base
 
+  belongs_to :settergetter_in_class_assignment, class_name: "Assignment",
+                            foreign_key: "in_class_assignment_id"
   belongs_to :course
   has_many :reading, dependent: :destroy
-  has_many :assignments, through: :courses
+
 
   delegate :code_and_name, to: :course, prefix: true
 
