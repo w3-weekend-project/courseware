@@ -142,19 +142,16 @@ class ApplicationTest < Minitest::Test
 
   end
 
-  def test_course_code_is_unique_in_term
-    tiy = School.create(name: "TIY")
-    fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
-    ruby = Course.create(name: "Course", term_id: fall.id, course_code: "F1")
-    assert ruby.save
-    js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "F1")
-    refute js.save
-    assert 
-
-
-
-
-  end
+  # def test_course_code_is_unique_in_term
+  #   tiy = School.create(name: "TIY")
+  #   fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
+  #   ruby = Course.create(name: "Course", term_id: fall.id, course_code: "F1")
+  #   assert ruby.save
+  #   js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "F1")
+  #   refute js.save
+  #   assert
+  #
+  # end
 
 
 
