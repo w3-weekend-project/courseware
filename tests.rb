@@ -39,7 +39,7 @@ class ApplicationTest < Minitest::Test
     assert school.respond_to?(:terms)
   end
 
-  def test_term_can_be_added
+  def test_term_can_be_added_to_school
     school = School.create(name: "TEST")
     Term.create(name: "Fall Term", school_id: school.id)
     assert school.terms.count != 0
