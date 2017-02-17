@@ -9,7 +9,7 @@ class Course < ActiveRecord::Base
   has_many :course_instructors, dependent: :restrict_with_error
 
   validates :name, presence: true
-  validates :course_code, presence: true, uniqueness: true
+  validates :course_code, presence: true, uniqueness: true, format: /\A[A-Za-z]{3}[0-9]{3}\z/
 
 
 

@@ -58,32 +58,32 @@ class ApplicationTest < Minitest::Test
 
   def test_term_cannot_be_deleted_with_courses
     term = Term.create(name: "Fall Term")
-    Course.create(name: "Coding 101", term_id: term.id, course_code: "C101")
+    Course.create(name: "Coding 101", term_id: term.id, course_code: "ABC123")
     refute term.destroy
     assert term.errors.full_messages.include? "Cannot delete record because dependent courses exist"
   end
 
   def test_course_has_students
-    course = Course.create(name: "Class")
+    course = Course.create(name: "Class", course_code: "TST100")
     CourseStudent.create(course_id: course.id)
     assert course.course_students != 0
   end
 
   def test_courses_cannot_be_deleted_with_students_in_them
-    course = Course.create(name: "Test Class", course_code: "T200")
+    course = Course.create(name: "Test Class", course_code: "TES200")
     CourseStudent.create(course_id: course.id)
     refute course.destroy
     assert course.errors.full_messages.include? "Cannot delete record because dependent course students exist"
   end
 
   def test_courses_has_assignments
-    course = Course.create(name:"Test Class")
+    course = Course.create(name:"Test Class", course_code: "TTT101")
     Assignment.create(name: "SQL", course_id: course.id)
     assert course.assignments != 0
   end
 
   def test_assignment_deleted_with_courses
-    tc = Course.create(name: "Tested Class", course_code: "TC101")
+    tc = Course.create(name: "Tested Class", course_code: "TCE101")
     bs = Assignment.create(name: "Bullshit", course_id: tc.id)
     tc.destroy
     refute Assignment.exists?(id: bs.id)
@@ -105,10 +105,10 @@ class ApplicationTest < Minitest::Test
     tiy = School.create(name: "TIY")
     fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
     winter = Term.create(name: "Winter", starts_on: 20160101, ends_on: 20160331, school_id: tiy.id)
-    ruby = Course.create(name: "Course", term_id: fall.id, course_code: "CO")
-    js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE")
-    c = Course.create(name: "C", term_id: winter.id, course_code: "CEE")
-    rails = Course.create(name: "Rails", term_id: winter.id, course_code: "BEE")
+    ruby = Course.create(name: "Course", term_id: fall.id, course_code: "CAD202")
+    js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE192")
+    c = Course.create(name: "C", term_id: winter.id, course_code: "CEE104")
+    rails = Course.create(name: "Rails", term_id: winter.id, course_code: "BEE837")
     assert tiy.terms.count > 1
     assert tiy.courses.count > 1
     assert_equal "TIY", rails.schools.first.name
@@ -156,9 +156,10 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_course_code_has_letters_and_numbers
-
-
-
+    spring = Term.create(name: "Spring", starts_on: 20160301, ends_on: 20160501)
+    cubs = Course.create(name: "Baseball", term_id: spring.id)
+    refute cubs.save
+    assert cubs.errors.full_messages.include? "Course code can't be blank"
   end
 
 
@@ -238,6 +239,7 @@ end #end test_lesson
     assert nc.destroy
     refute Course.exists?(id: nc.id)
     refute Lesson.exists?(id: less.id)
+
   end
 #-------------------------------------------------------------
 # Explorer Player B Step 3:  Associate courses with course_instructors
