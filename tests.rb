@@ -7,6 +7,9 @@ require 'pry'
 require './migration'
 require './application'
 
+#nancy insert, delete on merge, just for testing
+ActiveRecord::Base.logger = Logger.new(STDOUT)
+
 # Overwrite the development database connection with a test connection.
 ActiveRecord::Base.establish_connection(
   adapter:  'sqlite3',
@@ -30,8 +33,9 @@ class ApplicationTest < Minitest::Test
 
   end
 #-------------------------------------------------------------
-#Player B - Associate lessons with readings (both directions).
-#When a lesson is destroyed, its readings should be automatically destroyed
+# Explorer Player B Step 1 - Associate lessons with readings (both directions).
+# When a lesson is destroyed, its readings should be automatically destroyed
+# Note:  readings table has a course_id
 #-------------------------------------------------------------
 
 def test_lesson_has_table_column_methods
@@ -68,8 +72,9 @@ def test_delete_lesson_deletes_associated_readings
 end #end test_lesson
 
 #-------------------------------------------------------------
-#Player B - Associate lessons with courses (both directions).
+# Explorer Player B Step 2 - Associate lessons with courses (both directions).
 # When a course is destroyed, its lessons should be automatically destroyed
+# Note:  lessons table has a course_id
 #-------------------------------------------------------------
   def test_course_has_table_columns
     new_course = Course.create( name: "Course.1" )
@@ -80,7 +85,7 @@ end #end test_lesson
   def test_course_has_many_lessons
     new_course = Course.create( name: "Course1" )
     Lesson.create(course_id: new_course.id, name: "Lesson 1")
-    Lesson.create(course_id: new_course.id, name: "Lesson 1")
+    Lesson.create(course_id: new_course.id, name: "Lesson 2")
     assert new_course.lessons.count > 1
   end
 
@@ -95,12 +100,74 @@ end #end test_lesson
   def test_delete_lesson_deletes_associated_courses
     new_course = Course.create( name: "Course1" )
     Lesson.create(course_id: new_course.id, name: "Lesson 1")
-
     assert Course.find(new_course.id)
     new_course.destroy
     assert new_course.lessons.count == 0
     refute Course.find_by id: new_course.id
   end
-
-
+#-------------------------------------------------------------
+# Explorer Player B Step 3:  Associate courses with course_instructors
+# (both directions).
+# If the course has any instructors associated with it, the course should
+# not be deletable.
+# Note:  course_instructors table has a course_id
+#-------------------------------------------------------------
+def test_course_instructors_has_table_columns
+  new_course_instructor = CourseInstructor.create( course_id: 1, instructor_id: 1 )
+  assert new_course_instructor.respond_to?("id?")
+  assert new_course_instructor.respond_to?("course_id")
 end
+
+def test_courses_has_many_course_instructors
+  # no instructor table?
+  new_course = Course.create(name: "Course")
+  CourseInstructor.create( course_id: new_course.id, instructor_id: 500 )
+  CourseInstructor.create( course_id: new_course.id, instructor_id: 600 )
+  assert new_course.course_instructors.count > 1
+end
+
+def test_course_instructor_belongs_to_course
+  new_course = Course.create( name: "Course77" )
+  new_course_instructor = CourseInstructor.create( course_id: new_course.id, instructor_id: 800 )
+  assert new_course_instructor.course
+end
+
+def test_cant_delete_course_if_instructor_has_course
+  new_course = Course.create( name: "Course88" )
+  CourseInstructor.create(course_id: new_course.id, instructor_id: 99)
+  assert Course.find(new_course.id)
+  new_course.destroy
+  assert Course.find(new_course.id)
+end
+
+#-------------------------------------------------------------
+# Explorer Player B Step 4 - Associate lessons with their in_class_assignments
+# (both directions)
+# Note:  lessons table has an in_class_assignments_id
+#        and a pre_class_assignment_id    scope?
+# assignments have a course_id
+# lessons have a course_id
+#-------------------------------------------------------------
+#  Item has_many :users, through: :orders
+#  leaving with testing in lessons
+#rb Try 'has_many :assignments, :through => :course, :source => <name>'. Is it one of lessons or course_instructors?
+#          has_many :assignments, through: :courses
+# So testing that if I create a new assignment with course id 100
+# and a new lesson that has course id 100
+# if I create a in_class_assignment I can
+#     get to it from
+#   xxx   has_many :y, through:   :z
+#   assert x.y
+#
+def test_lessons_through_courses_get_assignment_and_vice_versa
+  new_course = Course.create( name: "Course710" )
+  new_assignment = Assignment.create( name: "In Class", course_id: new_course.id)
+  new_lesson = Lesson.create(course_id: new_course.id, in_class_assignment_id:  new_assignment.id )
+binding.pry
+  assert new_lesson.assignments
+end
+
+#Try 'has_many :assignments, :through => :course, :source => <name>'. Is it one of lessons or course_instructors?
+
+
+end # end ApplicationTest < Minitest::Test
