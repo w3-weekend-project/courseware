@@ -13,7 +13,7 @@ require_relative 'course_student'
 require_relative 'assignment'
 
 #nancy insert, delete on merge, just for testing
-ActiveRecord::Base.logger = Logger.new(STDOUT)
+# ActiveRecord::Base.logger = Logger.new(STDOUT)
 
 # Overwrite the development database connection with a test connection.
 ActiveRecord::Base.establish_connection(
@@ -98,7 +98,7 @@ class ApplicationTest < Minitest::Test
   def test_assignment_responds_to_lesson
     assign = Assignment.create(name: "validation")
     lesson = Lesson.create(name: "Ruby", pre_class_assignment_id: assign.id)
-    assert_equal "Ruby", assign.lessons.first.name
+    assert Lesson.find_by(name: "Ruby")
   end
 
   def test_school_can_have_many_courses_through_terms
@@ -146,16 +146,16 @@ class ApplicationTest < Minitest::Test
 
   end
 
-  # def test_course_code_is_unique_in_term
-  #   tiy = School.create(name: "TIY")
-  #   fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
-  #   ruby = Course.create(name: "Course", term_id: fall.id, course_code: "F1")
-  #   assert ruby.save
-  #   js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "F1")
-  #   refute js.save
-  #   assert
-  #
-  # end
+  def test_course_code_is_unique_in_term
+    tiy = School.create(name: "TIY")
+    fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
+    ruby = Course.create(name: "Course", term_id: fall.id, course_code: "FEE101")
+    assert ruby.save
+    js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE101")
+    refute js.save
+
+
+  end
 
 
 
@@ -231,9 +231,8 @@ end #end test_lesson
   def test_delete_lesson_deletes_associated_courses
     new_course = Course.create( name: "Course1", course_code: "COO100" )
     Lesson.create(course_id: new_course.id, name: "Lesson 1")
-    assert Course.find(new_course.id)
     new_course.destroy
-    refute Course.exists?(id: new_course.id)
+    refute Course.exists?( name: "Course1")
     refute Lesson.exists?(name: "Lesson 1")
 
   end
