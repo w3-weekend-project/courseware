@@ -1,4 +1,4 @@
-class AssignmentGrade < ActiveRecord::Base
+class AssignmentGrade < ActiveRecord::Base  
 
   scope :graded, -> { joins(:assignment).where("assignments.grades_released IS TRUE") }
 
