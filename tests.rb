@@ -83,22 +83,22 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_assignment_deleted_with_courses
-    course = Course.create(name: "Tested Class", course_code: "TC101")
-    Assignment.create(name: "Bullshit", course_id: course.id)
-    course.destroy
-    refute Assignment.exists?(name: "Bullshit")
+    tc = Course.create(name: "Tested Class", course_code: "TC101")
+    bs = Assignment.create(name: "Bullshit", course_id: tc.id)
+    tc.destroy
+    refute Assignment.exists?(id: bs.id)
   end
 
   def test_lesson_can_have_pre_class_assignments
     hw = Assignment.create(name: "validation")
-    lesson = Lesson.create(name: "Validating", pre_class_assignment_id: hw.id)
-    assert lesson.pre_class_assignment != 0
+    val = Lesson.create(name: "Validating", pre_class_assignment_id: hw.id)
+    assert val.pre_class_assignment != 0
   end
 
   def test_assignment_responds_to_lesson
     assign = Assignment.create(name: "validation")
-    lesson = Lesson.create(name: "Ruby", pre_class_assignment_id: assign.id)
-    assert Lesson.find_by(name: "Ruby")
+    rb = Lesson.create(name: "Ruby", pre_class_assignment_id: assign.id)
+    assert Lesson.find_by(id: rb.id)
   end
 
   def test_school_can_have_many_courses_through_terms
@@ -121,9 +121,9 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_lessons_name_is_required
-    lesson = Lesson.new
-    refute lesson.save
-    assert lesson.errors.full_messages.include? "Name can't be blank"
+    l = Lesson.new
+    refute l.save
+    assert l.errors.full_messages.include? "Name can't be blank"
   end
 
   def test_reading_requires_stuff
@@ -153,6 +153,10 @@ class ApplicationTest < Minitest::Test
     assert ruby.save
     js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE101")
     refute js.save
+  end
+
+  def test_course_code_has_letters_and_numbers
+
 
 
   end
@@ -180,9 +184,9 @@ end
 def test_lesson_has_many_readings
   # if lesson doesn't have a "has_many :readings" you'll get an error on the assert
   # below - NoMethodError: undefined method `reading' for #<Lesson:0x007fa1fe3ae308>    assert Lesson.respond_to?("count")
-  new_lesson = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
-  new_reading1 = Reading.create(order_number: 1, lesson_id: new_lesson.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
-  assert new_lesson.readings.count > 0
+  new_l = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
+  new_reading1 = Reading.create(order_number: 1, lesson_id: new_l.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
+  assert new_l.readings.count > 0
 end
 
 def test_reading_belongs_to_lesson
@@ -215,8 +219,8 @@ end #end test_lesson
 
   def test_course_has_many_lessons
     new_course = Course.create( name: "Course1", course_code: "COO100" )
-    Lesson.create(course_id: new_course.id, name: "Lesson 1")
-    Lesson.create(course_id: new_course.id, name: "Lesson 2")
+    l1 = Lesson.create(course_id: new_course.id, name: "Lesson 1")
+    l2 = Lesson.create(course_id: new_course.id, name: "Lesson 2")
     assert new_course.lessons.count > 1
   end
 
@@ -224,17 +228,16 @@ end #end test_lesson
     # Fails with message NoMethodError: undefined method `course
     # if this is missing:
     new_course2 = Course.create( name: "Course1" )
-    Lesson.create(course_id: new_course2.id, name: "Lesson 1")
+    le = Lesson.create(course_id: new_course2.id, name: "Lesson 1")
     assert new_course2.lessons
   end
 
   def test_delete_lesson_deletes_associated_courses
-    new_course = Course.create( name: "Course1", course_code: "COO100" )
-    Lesson.create(course_id: new_course.id, name: "Lesson 1")
-    new_course.destroy
-    refute Course.exists?( name: "Course1")
-    refute Lesson.exists?(name: "Lesson 1")
-
+    nc = Course.create(name: "Tester course", course_code: "COO100" )
+    less = Lesson.new(course_id: nc.id, name: "test")
+    assert nc.destroy
+    refute Course.exists?(id: nc.id)
+    refute Lesson.exists?(id: less.id)
   end
 #-------------------------------------------------------------
 # Explorer Player B Step 3:  Associate courses with course_instructors
