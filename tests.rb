@@ -292,8 +292,10 @@ end
 #                        foreign_key: "patron_id"
 #-------------------------------------------------------------
 
+
 def test_lessons_foreign_key_in_class_assignment
-  new_assignment = Assignment.create( name: "Assignment with In Class")
+  new_course = Course.create(name: "CourseB4", course_code: "BBB004")
+  new_assignment = Assignment.create( name: "Assignment Blach", course_id: new_course.id, percent_of_grade: 80.5)
   new_lesson = Lesson.create(in_class_assignment_id:  new_assignment.id )
   assert new_lesson.in_class_assignment
 
@@ -373,12 +375,31 @@ end
  # Explorer Player B Step 11 - Validate that the User's photo_url
  # must start with http:// or https://. Use a regular expression.
   def test_user_photo_url_starts_with_http_or_https
+    new_user = User.new(first_name: "Leo", last_name: "Pold", email: "kitty@gmail.com", photo_url: ".org")
+    refute new_user.save
+    new_user = User.new(first_name: "Leo", last_name: "Pold", email: "kitty@gmail.com", photo_url: "https://pinboard.in")
+    assert new_user.save
+  end
+  #------------------------------------------------------------
+  # Explorer Player B Step 12	Validate that Assignments have
+  # a course_id, name, and percent_of_grade.
 
-
+  def test_assignments_require_courseid_name_percentofgrade
+    new_assignment = Assignment.new
+    refute new_assignment.save
+    assert new_assignment.errors.full_messages.include? "Course can't be blank"
+    assert new_assignment.errors.full_messages.include? "Name can't be blank"
+    assert new_assignment.errors.full_messages.include? "Percent of grade can't be blank"
   end
 
-  # 12	Validate that Assignments have a course_id, name, and percent_of_grade.
-  # 13	Validate that the Assignment name is unique within a given course_id.
+
+  #------------------------------------------------------------
+  # Explorer Player B Step 13 - Validate that the Assignment name
+  # is unique within a given course_id.
+
+
+
+
 
 
 
