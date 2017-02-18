@@ -7,10 +7,10 @@ class Course < ActiveRecord::Base
   has_many :assignments, dependent: :destroy
   has_many :lessons, dependent: :destroy
   has_many :course_instructors, dependent: :restrict_with_error
+  has_many :readings, through: :lessons
 
   validates :name, presence: true
   validates :course_code, presence: true, uniqueness: true
-
 
 
 

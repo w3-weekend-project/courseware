@@ -1,5 +1,10 @@
 class User < ActiveRecord::Base
 
+  validates :first_name, presence: true
+  validates :last_name, presence: true
+  validates :email, presence: true, uniqueness: true, format:  { with: /\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/ }
+
+
   scope :want_to_be_instructors, -> { where(wants_to_be_instructor: true) }
   scope :instructors_for_school_id, ->(school_id) { where(school_id: school_id, instructor: true) }
 

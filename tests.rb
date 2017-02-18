@@ -39,9 +39,13 @@ class ApplicationTest < Minitest::Test
     assert school.respond_to?(:terms)
   end
 
+#Nancy note, added required fields to terms
+# #name: , starts_on: , ends_on: , school_id:
+# so added the starts_on and end on dates
   def test_term_can_be_added
     school = School.create(name: "TEST")
-    Term.create(name: "Fall Term", school_id: school.id)
+    Term.create(name: "Fall Term", school_id: school.id, starts_on: 20160901, ends_on: 20161231)
+ #name: , starts_on: , ends_on: , school_id:
     assert school.terms.count != 0
   end
 
@@ -57,7 +61,8 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_term_cannot_be_deleted_with_courses
-    term = Term.create(name: "Fall Term")
+    term = Term.create(name: "Fall Term", school_id: "some school", starts_on: 20170901, ends_on: 20171231)
+    assert term.save
     Course.create(name: "Coding 101", term_id: term.id, course_code: "C101")
     refute term.destroy
     assert term.errors.full_messages.include? "Cannot delete record because dependent courses exist"
@@ -97,7 +102,8 @@ class ApplicationTest < Minitest::Test
 
   def test_assignment_responds_to_lesson
     assign = Assignment.create(name: "validation")
-    lesson = Lesson.create(name: "Ruby", pre_class_assignment_id: assign.id)
+#nai    lesson =
+    Lesson.create(name: "Ruby", pre_class_assignment_id: assign.id)
     assert Lesson.find_by(name: "Ruby")
   end
 
@@ -105,9 +111,12 @@ class ApplicationTest < Minitest::Test
     tiy = School.create(name: "TIY")
     fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
     winter = Term.create(name: "Winter", starts_on: 20160101, ends_on: 20160331, school_id: tiy.id)
-    ruby = Course.create(name: "Course", term_id: fall.id, course_code: "CO")
-    js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE")
-    c = Course.create(name: "C", term_id: winter.id, course_code: "CEE")
+#nai    ruby =
+    Course.create(name: "Course", term_id: fall.id, course_code: "CO")
+#nai     js =
+    Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE")
+#nai     c =
+    Course.create(name: "C", term_id: winter.id, course_code: "CEE")
     rails = Course.create(name: "Rails", term_id: winter.id, course_code: "BEE")
     assert tiy.terms.count > 1
     assert tiy.courses.count > 1
@@ -181,7 +190,7 @@ def test_lesson_has_many_readings
   # if lesson doesn't have a "has_many :readings" you'll get an error on the assert
   # below - NoMethodError: undefined method `reading' for #<Lesson:0x007fa1fe3ae308>    assert Lesson.respond_to?("count")
   new_lesson = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
-  new_reading1 = Reading.create(order_number: 1, lesson_id: new_lesson.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
+  Reading.create(order_number: 1, lesson_id: new_lesson.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
   assert new_lesson.readings.count > 0
 end
 
@@ -208,31 +217,31 @@ end #end test_lesson
 # Note:  lessons table has a course_id
 #-------------------------------------------------------------
   def test_course_has_table_columns
-    new_course = Course.create( name: "Course.1" )
+    new_course = Course.create(name: "Course B21", course_code: "BBB021" )
     assert new_course.respond_to?("id?")
     assert new_course.respond_to?("term_id")
   end
 
   def test_course_has_many_lessons
-    new_course = Course.create( name: "Course1", course_code: "COO100" )
-    Lesson.create(course_id: new_course.id, name: "Lesson 1")
-    Lesson.create(course_id: new_course.id, name: "Lesson 2")
+    new_course = Course.create( name: "Course B22", course_code: "BBB022" )
+    Lesson.create(course_id: new_course.id, name: "Lesson B22a")
+    Lesson.create(course_id: new_course.id, name: "Lesson B22b")
     assert new_course.lessons.count > 1
   end
 
   def test_lesson_belongs_to_course
     # Fails with message NoMethodError: undefined method `course
     # if this is missing:
-    new_course2 = Course.create( name: "Course1" )
-    Lesson.create(course_id: new_course2.id, name: "Lesson 1")
+    new_course2 = Course.create(name: "Course B23", course_code: "BBB023" )
+    Lesson.create(course_id: new_course2.id, name: "Lesson B23")
     assert new_course2.lessons
   end
 
   def test_delete_lesson_deletes_associated_courses
-    new_course = Course.create( name: "Course1", course_code: "COO100" )
-    Lesson.create(course_id: new_course.id, name: "Lesson 1")
-    new_course.destroy
-    refute Course.exists?( name: "Course1")
+    new_course = Course.create( name: "Course B24", course_code: "BBB024" )
+    Lesson.create(course_id: new_course.id, name: "Lesson B24")
+    assert new_course.destroy
+    refute Course.exists?(name: "Course1")
     refute Lesson.exists?(name: "Lesson 1")
 
   end
@@ -281,9 +290,6 @@ end
 # Web Example:
 # belongs_to :author, class_name: "Patron",
 #                        foreign_key: "patron_id"
-#
-#
-#
 #-------------------------------------------------------------
 
 def test_lessons_foreign_key_in_class_assignment
@@ -298,11 +304,81 @@ def test_lessons_foreign_key_in_class_assignment
   #
 end
 
-# def test_in_class_assignment_id_exists_in_assignment
-#     new_lesson = Lesson.create
-#
-#
-# end
+#------------------------------------------------------------
+# Explorer Player B Step 5 - Set up a Course to have many readings
+# through the Course's lessons
+
+ def test_course_has_many_readings_through_lessons
+   new_course = Course.create( name: "CourseB5", course_code: "BBB005" )
+   new_lesson = Lesson.create( course_id: new_course.id, name: "lesson5" )
+   Reading.create( order_number: 5, lesson_id: new_lesson.id, url: "https://www.theironyard.com" )
+   assert new_course.readings
+ end
+
+ #------------------------------------------------------------
+ # Explorer Player B Step 6 - Validate that Schools must have names
+ #    Kendrick already did this above
+ #
+ # def test_school_name_is_required
+ #   school = School.new
+ #   refute school.save
+ #   assert school.errors.full_messages.include? "Name can't be blank"
+ # end
+
+ #------------------------------------------------------------
+ # Explorer Player B Step 7 - Validate that Terms must have name,
+ # starts_on, ends_on, and school_id.
+
+ def test_terms_require_name_startson_endson_schoolid
+   new_term = Term.new
+   refute new_term.save
+   assert new_term.errors.full_messages.include? "Name can't be blank"
+   assert new_term.errors.full_messages.include? "Starts on can't be blank"
+   assert new_term.errors.full_messages.include? "Ends on can't be blank"
+   assert new_term.errors.full_messages.include? "School can't be blank"
+ end
+
+ #------------------------------------------------------------
+ # Explorer Player B Step 8 - Validate that the User has a first_name,
+ # a last_name, and an email.
+ #
+ def test_users_require_firstname_lastname_email
+   new_user = User.new
+   refute new_user.save
+   assert new_user.errors.full_messages.include? "First name can't be blank"
+   assert new_user.errors.full_messages.include? "Last name can't be blank"
+   assert new_user.errors.full_messages.include? "Email can't be blank"
+ end
+
+ #------------------------------------------------------------
+ # Explorer Player B Step 9 - Validate that the User's email is unique.
+  def test_user_email_is_unique
+    new_user = User.new(first_name: "Izzy", last_name: "Belly", email: "izzy@gmail.com")
+    if new_user.save == false
+       #that is ok, test just happened to supply an existing email
+    end
+    new_user = User.new(first_name: "Leo", last_name: "Nardo", email: "izzy@gmail.com")
+    refute new_user.save
+  end
+
+ #------------------------------------------------------------
+ # Explorer Player B Step 10 - Validate that the User's email has the
+ # appropriate form for an e-mail address. Use a regular expression.
+  def test_user_email_proper_format
+    new_user = User.new(first_name: "Itty", last_name: "Bitty", email: "@hot@")
+    refute new_user.save
+  end
+
+ #------------------------------------------------------------
+ # Explorer Player B Step 11 - Validate that the User's photo_url
+ # must start with http:// or https://. Use a regular expression.
+  def test_user_photo_url_starts_with_http_or_https
+
+
+  end
+
+  # 12	Validate that Assignments have a course_id, name, and percent_of_grade.
+  # 13	Validate that the Assignment name is unique within a given course_id.
 
 
 
