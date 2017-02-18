@@ -2,7 +2,20 @@ class Assignment < ActiveRecord::Base
 
   has_many :pre_lesson, class_name: "Lesson", foreign_key: "pre_class_assignment_id"
   has_many :in_lessons, class_name: "Lesson", foreign_key: "in_class_assignment_id"
-  # Ask Chris how to have both of these at the same time
+  has_many :assignment_grades
+
+  validate :due_at_is_before_active
+
+ def due_at_is_before_active
+   return if due_at.blank? || active_at.blank?
+
+   if self.due_at <= self.active_at
+     errors.add(:due_at, "must be after active date")
+   end
+ end
+
+
+
 
   scope :active_for_students, -> { where("active_at <= ? AND due_at >= ? AND students_can_submit = ?", Time.now, Time.now, true) }
 

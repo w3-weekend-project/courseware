@@ -40,7 +40,7 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_term_can_be_added_to_school
-    school = School.create(name: "TEST")
+    school = School.create(name: "PHS")
     Term.create(name: "Fall Term", school_id: school.id)
     assert school.terms.count != 0
   end
@@ -64,27 +64,27 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_course_has_students
-    course = Course.create(name: "Class", course_code: "TST100")
+    course = Course.create(name: "Financial Math", course_code: "MAT373")
     CourseStudent.create(course_id: course.id)
     assert course.course_students != 0
   end
 
   def test_courses_cannot_be_deleted_with_students_in_them
-    course = Course.create(name: "Test Class", course_code: "TES200")
+    course = Course.create(name: "Time Series", course_code: "MAT420")
     CourseStudent.create(course_id: course.id)
     refute course.destroy
     assert course.errors.full_messages.include? "Cannot delete record because dependent course students exist"
   end
 
   def test_courses_has_assignments
-    course = Course.create(name:"Test Class", course_code: "TTT101")
+    course = Course.create(name:"Linear Regression Analysis", course_code: "MAT512")
     Assignment.create(name: "SQL", course_id: course.id)
     assert course.assignments != 0
   end
 
   def test_assignment_deleted_with_courses
-    tc = Course.create(name: "Tested Class", course_code: "TCE101")
-    bs = Assignment.create(name: "Bullshit", course_id: tc.id)
+    tc = Course.create(name: "Linear Algebra", course_code: "MAT351")
+    bs = Assignment.create(name: "Matrix Multiplication", course_id: tc.id)
     tc.destroy
     refute Assignment.exists?(id: bs.id)
   end
@@ -162,7 +162,41 @@ class ApplicationTest < Minitest::Test
     assert cubs.errors.full_messages.include? "Course code can't be blank"
   end
 
+  def test_course_instructors_are_instructors_which_are_users
+    phil = User.create(first_name: "Phil", last_name: "Nye")
+    science = CourseInstructor.create(instructor_id: phil.id)
+    assert science.instructor_id == phil.id
+  end
 
+  def test_assignments_have_grades
+    hw2 = Assignment.new
+    assert hw2.respond_to?(:assignment_grades)
+  end
+
+  def test_assignment_grades_are_associated_with_assignments
+    hw3 = Assignment.create(name: "Creating Weapon X")
+    hw3_grade = AssignmentGrade.create(assignment_id: hw3.id)
+    assert hw3.id == hw3_grade.assignment_id
+  end
+
+  def test_courses_can_have_many_instructors
+    science = Course.create(name: "Advanced Science Methodology For The Smart Kids", course_code: "SCI420")
+    nye = User.create(first_name: "Phill", last_name: "Nye")
+    sci = User.create(first_name: "Science", last_name: "Guy")
+    CourseInstructor.create(course_id: science.id, instructor_id: nye.id)
+    CourseInstructor.create(course_id: science.id, instructor_id: sci.id)
+    assert science.course_instructors.length > 1
+  end
+
+  def test_assignment_due_at_date_is_not_before_active_at_date
+    homework = Assignment.create(due_at: 20160101, active_at: 20160101)
+    take_home = Assignment.create(due_at: 20160304, active_at: 20160306)
+    refute homework.save
+    refute take_home.save
+    assert homework.errors.full_messages.include? "Due at must be after active date"
+    assert take_home.errors.full_messages.include? "Due at must be after active date"
+
+  end
 
 
   #Nancy's code
@@ -176,36 +210,36 @@ class ApplicationTest < Minitest::Test
 # Note:  readings table has a course_id
 #-------------------------------------------------------------
 
-def test_lesson_has_table_column_methods
-  new_lesson = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
-  assert  new_lesson.respond_to?("id?")
-  refute  new_lesson.respond_to?("count")
-end
+  def test_lesson_has_table_column_methods
+    new_lesson = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
+    assert  new_lesson.respond_to?("id?")
+    refute  new_lesson.respond_to?("count")
+  end
 
-def test_lesson_has_many_readings
-  # if lesson doesn't have a "has_many :readings" you'll get an error on the assert
-  # below - NoMethodError: undefined method `reading' for #<Lesson:0x007fa1fe3ae308>    assert Lesson.respond_to?("count")
-  new_l = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
-  new_reading1 = Reading.create(order_number: 1, lesson_id: new_l.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
-  assert new_l.readings.count > 0
-end
+  def test_lesson_has_many_readings
+    # if lesson doesn't have a "has_many :readings" you'll get an error on the assert
+    # below - NoMethodError: undefined method `reading' for #<Lesson:0x007fa1fe3ae308>    assert Lesson.respond_to?("count")
+    new_l = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
+    new_reading1 = Reading.create(order_number: 1, lesson_id: new_l.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
+    assert new_l.readings.count > 0
+  end
 
-def test_reading_belongs_to_lesson
-  # if reading doesn't have a "belongs_to lesson" you receive NoMethodError:
-  # undefined method `lesson' for #<Reading:0x007ff374c9f198>
-  new_lesson = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
-  new_reading1 = Reading.create( lesson_id: new_lesson.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
-  assert new_reading1.lesson
-end
+  def test_reading_belongs_to_lesson
+    # if reading doesn't have a "belongs_to lesson" you receive NoMethodError:
+    # undefined method `lesson' for #<Reading:0x007ff374c9f198>
+    new_lesson = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
+    new_reading1 = Reading.create( lesson_id: new_lesson.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
+    assert new_reading1.lesson
+  end
 
-def test_delete_lesson_deletes_associated_readings
-  new_lesson = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
-  Reading.create( lesson_id: new_lesson.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
-  assert Lesson.find(new_lesson.id)
-  new_lesson.destroy
-  assert new_lesson.readings.count == 0
-  refute Lesson.find_by id: new_lesson.id
-end #end test_lesson
+  def test_delete_lesson_deletes_associated_readings
+    new_lesson = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
+    Reading.create( lesson_id: new_lesson.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
+    assert Lesson.find(new_lesson.id)
+    new_lesson.destroy
+    assert new_lesson.readings.count == 0
+    refute Lesson.find_by id: new_lesson.id
+  end #end test_lesson
 
 #-------------------------------------------------------------
 # Explorer Player B Step 2 - Associate lessons with courses (both directions).
@@ -241,74 +275,73 @@ end #end test_lesson
     refute Lesson.exists?(id: less.id)
 
   end
-#-------------------------------------------------------------
-# Explorer Player B Step 3:  Associate courses with course_instructors
-# (both directions).
-# If the course has any instructors associated with it, the course should
-# not be deletable.
-# Note:  course_instructors table has a course_id
-#-------------------------------------------------------------
-def test_course_instructors_has_table_columns
-  new_course_instructor = CourseInstructor.create( course_id: 1, instructor_id: 1 )
-  assert new_course_instructor.respond_to?("id?")
-  assert new_course_instructor.respond_to?("course_id")
-end
+  #-------------------------------------------------------------
+  # Explorer Player B Step 3:  Associate courses with course_instructors
+  # (both directions).
+  # If the course has any instructors associated with it, the course should
+  # not be deletable.
+  # Note:  course_instructors table has a course_id
+  #-------------------------------------------------------------
+  def test_course_instructors_has_table_columns
+    new_course_instructor = CourseInstructor.create( course_id: 1, instructor_id: 1 )
+    assert new_course_instructor.respond_to?("id?")
+    assert new_course_instructor.respond_to?("course_id")
+  end
 
-def test_courses_has_many_course_instructors
-  # no instructor table?
-  new_course = Course.create(name: "Course", course_code: "COO101")
-  CourseInstructor.create( course_id: new_course.id, instructor_id: 500 )
-  CourseInstructor.create( course_id: new_course.id, instructor_id: 600 )
-  assert new_course.course_instructors.count > 1
-end
+  def test_courses_has_many_course_instructors
+    # no instructor table?
+    new_course = Course.create(name: "Course", course_code: "COO101")
+    CourseInstructor.create( course_id: new_course.id, instructor_id: 500 )
+    CourseInstructor.create( course_id: new_course.id, instructor_id: 600 )
+    assert new_course.course_instructors.count > 1
+  end
 
-def test_course_instructor_belongs_to_course
-  new_course = Course.create( name: "Course77", course_code: "COO770" )
-  new_course_instructor = CourseInstructor.create( course_id: new_course.id, instructor_id: 800 )
-  assert new_course_instructor.course
-end
+  def test_course_instructor_belongs_to_course
+    new_course = Course.create( name: "Course77", course_code: "COO770" )
+    new_course_instructor = CourseInstructor.create( course_id: new_course.id, instructor_id: 800 )
+    assert new_course_instructor.course
+  end
 
-def test_cant_delete_course_if_instructor_has_course
-  new_course = Course.create( name: "Course88", course_code: "COO808" )
-  CourseInstructor.create(course_id: new_course.id, instructor_id: 99)
-  assert Course.find(new_course.id)
-  new_course.destroy
-  assert Course.find(new_course.id)
-end
+  def test_cant_delete_course_if_instructor_has_course
+    new_course = Course.create( name: "Course88", course_code: "COO808" )
+    CourseInstructor.create(course_id: new_course.id, instructor_id: 99)
+    assert Course.find(new_course.id)
+    new_course.destroy
+    assert Course.find(new_course.id)
+  end
 
-#-------------------------------------------------------------
-# Explorer Player B Step 4 - Associate lessons with their in_class_assignments
-# (both directions)
-# Note:  lessons table has an in_class_assignments_id
-#        and a pre_class_assignment_id.  Both are foreign key relationships
-#        with a non-standard name
-#
-# Web Example:
-# belongs_to :author, class_name: "Patron",
-#                        foreign_key: "patron_id"
-#
-#
-#
-#-------------------------------------------------------------
-
-def test_lessons_foreign_key_in_class_assignment
-  new_assignment = Assignment.create( name: "Assignment with In Class")
-  new_lesson = Lesson.create(in_class_assignment_id:  new_assignment.id )
-  assert new_lesson.in_class_assignment
-
-  # for a lesson, should be able to get the assignment represented by
-  #     in_class_assignment_id
-  # for an assignment, should be able to find for what all lessons
-  #        have it as an in_class_assignment_id
+  #-------------------------------------------------------------
+  # Explorer Player B Step 4 - Associate lessons with their in_class_assignments
+  # (both directions)
+  # Note:  lessons table has an in_class_assignments_id
+  #        and a pre_class_assignment_id.  Both are foreign key relationships
+  #        with a non-standard name
   #
-end
+  # Web Example:
+  # belongs_to :author, class_name: "Patron",
+  #                        foreign_key: "patron_id"
+  #
+  #
+  #
+  #-------------------------------------------------------------
+
+  def test_lessons_foreign_key_in_class_assignment
+    new_assignment = Assignment.create( name: "Assignment with In Class")
+    new_lesson = Lesson.create(in_class_assignment_id:  new_assignment.id )
+    assert new_lesson.in_class_assignment
+
+    # for a lesson, should be able to get the assignment represented by
+    #     in_class_assignment_id
+    # for an assignment, should be able to find for what all lessons
+    #        have it as an in_class_assignment_id
+    #
+  end
 
 # def test_in_class_assignment_id_exists_in_assignment
 #     new_lesson = Lesson.create
 #
 #
 # end
-
 
 
 end # end ApplicationTest < Minitest::Test
