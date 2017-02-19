@@ -1,13 +1,13 @@
 class Course < ActiveRecord::Base
 
   belongs_to :term
-
   has_many :schools, through: :term
   has_many :course_students, dependent: :restrict_with_error
   has_many :assignments, dependent: :destroy
   has_many :lessons, dependent: :destroy
   has_many :course_instructors, dependent: :restrict_with_error
   has_many :readings, through: :lessons
+  has_many :students, through: :course_students, foreign_key: "student_id"
 
   validates :name, presence: true
   validates :course_code, presence: true, uniqueness: true

@@ -13,7 +13,7 @@ require_relative 'course_student'
 require_relative 'assignment'
 
 #nancy insert, delete on merge, just for testing
-# ActiveRecord::Base.logger = Logger.new(STDOUT)
+ActiveRecord::Base.logger = Logger.new(STDOUT)
 
 # Overwrite the development database connection with a test connection.
 ActiveRecord::Base.establish_connection(
@@ -169,11 +169,7 @@ class ApplicationTest < Minitest::Test
 
 
 
-  #Nancy's code
-
-  def test_lesson_has_methods
-
-  end
+#Start of Nancy's code
 #-------------------------------------------------------------
 # Explorer Player B Step 1 - Associate lessons with readings (both directions).
 # When a lesson is destroyed, its readings should be automatically destroyed
@@ -292,7 +288,6 @@ end
 #                        foreign_key: "patron_id"
 #-------------------------------------------------------------
 
-
 def test_lessons_foreign_key_in_class_assignment
   new_course = Course.create(name: "CourseB4", course_code: "BBB004")
   new_assignment = Assignment.create( name: "Assignment Blach", course_id: new_course.id, percent_of_grade: 80.5)
@@ -318,19 +313,19 @@ end
  end
 
  #------------------------------------------------------------
- # Explorer Player B Step 6 - Validate that Schools must have names
- #    Kendrick already did this above
- #
- # def test_school_name_is_required
- #   school = School.new
- #   refute school.save
- #   assert school.errors.full_messages.include? "Name can't be blank"
- # end
+  # Explorer Player B Step 6 - Validate that Schools must have names
+  #    Kendrick already did this above
+
+  def test_school_name_is_required
+    school = School.new
+    refute school.save
+    assert school.errors.full_messages.include? "Name can't be blank"
+  end
 
  #------------------------------------------------------------
  # Explorer Player B Step 7 - Validate that Terms must have name,
  # starts_on, ends_on, and school_id.
-
+ #------------------------------------------------------------
  def test_terms_require_name_startson_endson_schoolid
    new_term = Term.new
    refute new_term.save
@@ -343,7 +338,7 @@ end
  #------------------------------------------------------------
  # Explorer Player B Step 8 - Validate that the User has a first_name,
  # a last_name, and an email.
- #
+ #------------------------------------------------------------
  def test_users_require_firstname_lastname_email
    new_user = User.new
    refute new_user.save
@@ -366,6 +361,7 @@ end
  #------------------------------------------------------------
  # Explorer Player B Step 10 - Validate that the User's email has the
  # appropriate form for an e-mail address. Use a regular expression.
+ #------------------------------------------------------------
   def test_user_email_proper_format
     new_user = User.new(first_name: "Itty", last_name: "Bitty", email: "@hot@")
     refute new_user.save
@@ -374,6 +370,7 @@ end
  #------------------------------------------------------------
  # Explorer Player B Step 11 - Validate that the User's photo_url
  # must start with http:// or https://. Use a regular expression.
+ #------------------------------------------------------------
   def test_user_photo_url_starts_with_http_or_https
     new_user = User.new(first_name: "Leo", last_name: "Pold", email: "kitty@gmail.com", photo_url: ".org")
     refute new_user.save
@@ -383,7 +380,7 @@ end
   #------------------------------------------------------------
   # Explorer Player B Step 12	Validate that Assignments have
   # a course_id, name, and percent_of_grade.
-
+  #------------------------------------------------------------
   def test_assignments_require_courseid_name_percentofgrade
     new_assignment = Assignment.new
     refute new_assignment.save
@@ -392,12 +389,86 @@ end
     assert new_assignment.errors.full_messages.include? "Percent of grade can't be blank"
   end
 
-
   #------------------------------------------------------------
   # Explorer Player B Step 13 - Validate that the Assignment name
   # is unique within a given course_id.
+  #------------------------------------------------------------
+  def test_assignment_unique_for_course
+    new_course = Course.create(name: "Course E-B-13", course_code: "E-B-13")
+    new_assignment = Assignment.new
+    new_assignment.name = "Explorer E-B-13"
+    new_assignment.course_id = new_course.id
+    new_assignment.percent_of_grade = 10.00
+    new_assignment.save
+    new_assignment = Assignment.create(name: "Explorer E-B-13", course_id: new_course.id, percent_of_grade: 15.00)
+    refute new_assignment.save
+  end
 
+  #------------------------------------------------------------
+  # Adventure Player B Step 1 - Associate CourseStudents with students
+  # (who happen to be users)
+  #
+  # The course_students table is a join table between student and course (therefore
+  # the table has a student_id and a course_id).  It can answer what courses a student
+  # is taking and which students are taking a given course.
+  #
+  # The first assert tests that in CourseStudent we've defined that the foreign key
+  # student_id is the way to access the user table
+  # The second assert tests that in User we've defined that we can get the course_ids
+  # that student is taking
+  #------------------------------------------------------------
+  def test_student_id_in_courses_is_foreign_key_to_users
+    new_student = User.create(first_name: "Izzy", last_name: "Bella", email: "izzybella@gmail.com")
+    new_course1 = Course.create(name: "CourseAB101", course_code: "CAB101")
+    new_course2 = Course.create(name: "CourseAB102", course_code: "CAB102")
+    new_course_student = CourseStudent.create(student_id: new_student.id, course_id: new_course1.id)
+    new_course_student = CourseStudent.create(student_id: new_student.id, course_id: new_course2.id)
+    assert new_course_student.students
+    assert new_student.courses
+  end
 
+  #------------------------------------------------------------
+  # Adventure Player B Step 2 - Associate CourseStudents with
+  # assignment_grades (both directions)
+  #-------------------------------------------------------------
+  def test_AssignmentGrade_has_foreign_key_to_CourseStudent
+    new_course1 = Course.create(name: "Course 1", course_code: "A-B-2-1")
+    new_assignment1 = Assignment.create(name: "Course1 Assignment 1", course_id: new_course1.id, percent_of_grade: 50.00)
+    new_student1 = User.create(first_name: "Izzy", last_name: "Bella", email: "izzybella@gmail.com")
+    new_course_student1 = CourseStudent.create(student_id: new_student1.id, course_id: new_course1.id)
+    new_assignment_grade1 = AssignmentGrade.create(assignment_id: new_assignment1.id, course_student_id: new_course_student1.id)
+    assert new_assignment_grade1.course_student
+    assert new_course_student1.assignment_grades
+  end
+
+  #------------------------------------------------------------
+  # Adventure Player B Step 3 - Set up a Course to have many students
+  # through the course's course_students.
+  #-------------------------------------------------------------
+  def test_Course_has_many_students_through_CourseStudent
+    new_course = Course.create(name: "Course 1", course_code: "A-B-2-1")
+    new_student1 = User.create(first_name: "Izzy", last_name: "Bella", email: "izzybella@gmail.com")
+    new_student2 = User.create(first_name: "Itty", last_name: "Bitty", email: "ittybitty@gmail.com")
+    new_student3 = User.create(first_name: "Leo", last_name: "Pold", email: "leo@gmail.com")
+    new_student4 = User.create(first_name: "Leo", last_name: "Nardo", email: "nardo@gmail.com")
+    CourseStudent.create(student_id: new_student1.id, course_id: new_course.id)
+    CourseStudent.create(student_id: new_student2.id, course_id: new_course.id)
+    CourseStudent.create(student_id: new_student3.id, course_id: new_course.id)
+    CourseStudent.create(student_id: new_student4.id, course_id: new_course.id)
+    assert new_course.students
+  end
+
+  #------------------------------------------------------------
+  # Adventure Player B Step 4 - Associate a Course with its ONE
+  # primary_instructor. This primary instructor is the one who
+  # is referenced by a course_instructor which has its primary flag set to true.
+  #-------------------------------------------------------------
+  def test_Course_has_primary_instructor_in_CourseInstructor
+    new_course = Course.create(name: "Course 1", course_code: "A-B-2-1")
+    new_instructor1 = 
+    new_instructor2 =
+    new_course_instructor = CourseInstuctor.create(course_id: , instuctor_id: , primary: )
+  end
 
 
 
