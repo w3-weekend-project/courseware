@@ -1,6 +1,6 @@
 class Assignment < ActiveRecord::Base
 
-  has_many :pre_lesson, class_name: "Lesson", foreign_key: "pre_class_assignment_id"
+  has_many :pre_lessons, class_name: "Lesson", foreign_key: "pre_class_assignment_id"
   has_many :in_lessons, class_name: "Lesson", foreign_key: "in_class_assignment_id"
   has_many :assignment_grades
 

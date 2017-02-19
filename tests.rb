@@ -185,8 +185,8 @@ class ApplicationTest < Minitest::Test
 
   def test_courses_can_have_many_instructors
     science = Course.create(name: "Advanced Science Methodology For The Smart Kids", course_code: "SCI420")
-    nye = User.create(first_name: "Phill", last_name: "Nye", email: "phillipnye@science.edu")
-    sci = User.create(first_name: "Science", last_name: "Guy", email: "scienceguy@nye.edu")
+    nye = User.create(first_name: "Phil", last_name: "Adelphia", email: "philadelphia@edu.edu")
+    sci = User.create(first_name: "Phil", last_name: "Lanthropy", email: "philanthropy@charity.com")
     CourseInstructor.create(course_id: science.id, instructor_id: nye.id)
     CourseInstructor.create(course_id: science.id, instructor_id: sci.id)
     assert science.course_instructors.length > 1
