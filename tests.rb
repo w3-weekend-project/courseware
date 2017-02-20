@@ -63,7 +63,8 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_term_cannot_be_deleted_with_courses
-    term = Term.create(name: "Fall Term", starts_on: 20160903, ends_on: 20161202)
+    tiy = School.create(name: "The Iron-Yard")
+    term = Term.create(name: "Fall Term", school_id: tiy.id, starts_on: 20160903, ends_on: 20161202)
     Course.create(name: "Coding 101", term_id: term.id, course_code: "ABC123")
     refute term.destroy
     assert term.errors.full_messages.include? "Cannot delete record because dependent courses exist"
