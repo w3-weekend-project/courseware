@@ -1,8 +1,15 @@
 class Assignment < ActiveRecord::Base
 
-  has_many :pre_lesson, class_name: "Lesson", foreign_key: "pre_class_assignment_id"
+
+  validates :course_id,        presence: true
+  validates :name,             presence: true, uniqueness: true
+  validates :percent_of_grade, presence: true
+
+  has_many :pre_lessons, class_name: "Lesson", foreign_key: "pre_class_assignment_id"
   has_many :in_lessons, class_name: "Lesson", foreign_key: "in_class_assignment_id"
-  # Ask Chris how to have both of these at the same time
+
+  # Kendrick's quesiton:  Ask Chris how to have both of these at the same time
+
 
   scope :active_for_students, -> { where("active_at <= ? AND due_at >= ? AND students_can_submit = ?", Time.now, Time.now, true) }
 
