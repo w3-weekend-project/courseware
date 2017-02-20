@@ -205,10 +205,13 @@ class ApplicationTest < Minitest::Test
   def test_that_assignments_are_ordered_correctly
     trump = Course.create(name: "How to destroy a country", course_code: "USA420")
     win = Assignment.create(name: "Win an election with Russia's help", course_id: trump.id, percent_of_grade: 0.25, due_at: 20161108, active_at: 20160101)
-    news = Assignment.create(name: "Denouncing all free press as fake news", course_id: trump.id, percent_of_grade: 0.25, due_at: 20161108, active_at: 20170120)
+    news = Assignment.create(name: "Denouncing all free press as fake news", course_id: trump.id, percent_of_grade: 0.25, due_at: 20161108, active_at: 20160501)
     swamp = Assignment.create(name: "Fill entire cabinet with CEO's", course_id: trump.id, percent_of_grade: 0.25, due_at: 20170120, active_at: 20160101)
-    assert [win, news, swamp] == trump.assignments.to_a
+    assert trump.assignments.first == win
+    assert trump.assignments.second == news
+    assert trump.assignments.last == swamp
   end
+
 
 
   #Nancy's code
