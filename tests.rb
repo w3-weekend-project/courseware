@@ -501,17 +501,18 @@ end
 
     new_course = Course.create(name: "Course 1", course_code: "A-B-4-1")
     new_instructor1 = User.create(first_name: "Mr.", last_name: "Freeman", email: "freeman@gmail.com")
-    new_instructor2 = User.create(first_name: "Mrs.", last_name: "Inman", email: "inman@gmail.com")
-    new_instructor3 = User.create(first_name: "Mr.", last_name: "Loser", email: "loser@gmail.com")
-    CourseInstructor.create(course_id: new_course.id, instructor_id: new_instructor1.id)
-    CourseInstructor.create(course_id: new_course.id, instructor_id: new_instructor2.id, primary: true)
-    CourseInstructor.create(course_id: new_course.id, instructor_id: new_instructor3.id, primary: true)
-    assert new_course.instructors
-    assert new_instructor1.courses
+    # new_instructor2 = User.create(first_name: "Mrs.", last_name: "Inman", email: "inman@gmail.com")
+    # new_instructor3 = User.create(first_name: "Mr.", last_name: "Loser", email: "loser@gmail.com")
+    new_course_instructor = CourseInstructor.create(course_id: new_course.id, instructor_id: new_instructor1.id, primary: true)
+    # CourseInstructor.create(course_id: new_course.id, instructor_id: new_instructor2.id, primary: true)
+    # CourseInstructor.create(course_id: new_course.id, instructor_id: new_instructor3.id, primary: true)
+    assert new_course.primary_instructor == new_course_instructor
+
+#    assert new_instructor1.courses
     new_course.destroy
     new_instructor1.destroy
-    new_instructor2.destroy
-    new_instructor3.destroy
+    # new_instructor2.destroy
+    # new_instructor3.destroy
   end
 
 

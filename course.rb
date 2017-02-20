@@ -9,9 +9,7 @@ class Course < ActiveRecord::Base
   has_many :readings, through: :lessons
   has_many :students, through: :course_students, foreign_key: "student_id"
   has_many :instructors, through: :course_instructors, foreign_key: "instructor_id"
-  has_many :primary_instructors, through: :course_instructors,
-                                  foreign_key: "instructor_id"
-
+  has_one  :primary_instructor, -> {  where(primary: true) }, class_name: "CourseInstructor"
 
 
   validates :name, presence: true
