@@ -1,5 +1,15 @@
 class User < ActiveRecord::Base
 
+  has_many :courses,       class_name: "CourseStudent",
+                           foreign_key: "student_id"
+  has_many :instuctors,    class_name: "CourseInstuctor",
+                           foreign_key: "instructor_id"
+
+  validates :first_name, presence: true
+  validates :last_name, presence: true
+  validates :email, presence: true, uniqueness: true, format:  { with: /\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/ }
+  validates :photo_url, format: { with: /(^$)|(^(http|https):\/\/[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(([0-9]{1,5})?\/.*)?$)/ix }
+
 
   scope :want_to_be_instructors, -> { where(wants_to_be_instructor: true) }
   scope :instructors_for_school_id, ->(school_id) { where(school_id: school_id, instructor: true) }

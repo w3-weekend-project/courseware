@@ -1,17 +1,20 @@
 class Course < ActiveRecord::Base
 
   belongs_to :term
-
   has_many :schools, through: :term
   has_many :course_students, dependent: :restrict_with_error
   has_many :assignments, dependent: :destroy
   has_many :lessons, dependent: :destroy
   has_many :course_instructors, dependent: :restrict_with_error
-  has_many :instructors, through: :course_instructors
+
+  has_many :readings, through: :lessons
+  has_many :students, through: :course_students, foreign_key: "student_id"
+  has_many :instructors, through: :course_instructors, foreign_key: "instructor_id"
+  has_one  :primary_instructor, -> {  where(primary: true) }, class_name: "CourseInstructor"
+
 
   validates :name, presence: true
-  validates :course_code, presence: true, uniqueness: true
-
+  validates :course_code, presence: true, uniqueness: true, format: /\A[A-Za-z]{3}[0-9]{3}\z/
 
 
 
@@ -24,6 +27,13 @@ class Course < ActiveRecord::Base
 
   delegate :starts_on, to: :term, prefix: true
   delegate :ends_on, to: :term, prefix: true
+
+#NAI insert def 1
+
+
+#NAI end insert
+
+
 
   def self.example_courses
     self.where(public: true).order("id DESC").first(5)
