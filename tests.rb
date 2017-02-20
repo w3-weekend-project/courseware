@@ -152,16 +152,16 @@ class ApplicationTest < Minitest::Test
     tiy = School.create(name: "TIY")
     fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
     ruby = Course.create(name: "Course", term_id: fall.id, course_code: "FEE101")
-    assert ruby.save
+    assert ruby.persisted?
     js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE101")
-    refute js.save
+    refute js.persisted?
   end
 
   def test_course_code_has_letters_and_numbers
     wrigley = School.create(name: "Wrigley Field")
     spring = Term.create(name: "Spring", starts_on: 20160301, ends_on: 20160501, school_id: wrigley.id)
     cubs = Course.create(name: "Baseball", term_id: spring.id)
-    refute cubs.save
+    refute cubs.persisted?
     assert cubs.errors.full_messages.include? "Course code can't be blank"
   end
 
@@ -193,14 +193,21 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_assignment_due_at_date_is_not_before_active_at_date
-    muggle = Course.create(name: "Killing muggles for beginners", course_code: "MUG666")
+    muggle = Course.create(name: "Killing muggles for beginners", course_code: "MUG333")
     homework = Assignment.create(name: "First assassination", course_id: muggle.id, percent_of_grade: 0.50, due_at: 20160101, active_at: 20160101)
     take_home = Assignment.create(name: "Kidnapping babies", course_id: muggle.id, percent_of_grade: 0.49, due_at: 20160304, active_at: 20160306)
-    refute homework.save
-    refute take_home.save
+    refute homework.persisted?
+    refute take_home.persisted?
     assert homework.errors.full_messages.include? "Due at must be after active date"
     assert take_home.errors.full_messages.include? "Due at must be after active date"
+  end
 
+  def test_that_assignments_are_ordered_correctly
+    trump = Course.create(name: "How to destroy a country", course_code: "USA420")
+    win = Assignment.create(name: "Win an election with Russia's help", course_id: trump.id, percent_of_grade: 0.25, due_at: 20161108, active_at: 20160101)
+    news = Assignment.create(name: "Denouncing all free press as fake news", course_id: trump.id, percent_of_grade: 0.25, due_at: 20161108, active_at: 20170120)
+    swamp = Assignment.create(name: "Fill entire cabinet with CEO's", course_id: trump.id, percent_of_grade: 0.25, due_at: 20170120, active_at: 20160101)
+    assert [win, news, swamp] == trump.assignments.to_a
   end
 
 

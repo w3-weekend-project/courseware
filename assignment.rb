@@ -6,6 +6,9 @@ class Assignment < ActiveRecord::Base
 
   validate :due_at_is_before_active
 
+  default_scope { order('due_at, active_at') }
+
+
  def due_at_is_before_active
    return if due_at.blank? || active_at.blank?
 
