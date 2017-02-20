@@ -6,6 +6,7 @@ class Course < ActiveRecord::Base
   has_many :assignments, dependent: :destroy
   has_many :lessons, dependent: :destroy
   has_many :course_instructors, dependent: :restrict_with_error
+
   has_many :readings, through: :lessons
   has_many :students, through: :course_students, foreign_key: "student_id"
   has_many :instructors, through: :course_instructors, foreign_key: "instructor_id"

@@ -46,9 +46,8 @@ class ApplicationTest < Minitest::Test
 
 
   def test_term_can_be_added_to_school
-    school = School.create(name: "TEST")
-    Term.create(name: "Fall Term", school_id: school.id, starts_on: 20160901, ends_on: 20161231)
- #name: , starts_on: , ends_on: , school_id:
+    school = School.create(name: "PHS")
+    Term.create(name: "Fall Term", starts_on: 20160901, ends_on: 20161231, school_id: school.id)
     assert school.terms.count != 0
   end
 
@@ -58,53 +57,55 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_course_can_be_added_to_term
-    term = Term.create(name: "Fall Term")
+    term = Term.create(name: "Fall Term", starts_on: 20160902, ends_on: 20161201)
     Course.create(name: "Coding 101", term_id: term.id)
     assert term.courses != 0
   end
 
   def test_term_cannot_be_deleted_with_courses
-    term = Term.create(name: "Fall Term", school_id: "some school", starts_on: 20170901, ends_on: 20171231)
-    assert term.save
+    tiy = School.create(name: "The Iron-Yard")
+    term = Term.create(name: "Fall Term", school_id: tiy.id, starts_on: 20160903, ends_on: 20161202)
     Course.create(name: "Coding 101", term_id: term.id, course_code: "ABC123")
     refute term.destroy
     assert term.errors.full_messages.include? "Cannot delete record because dependent courses exist"
   end
 
   def test_course_has_students
-    course = Course.create(name: "Class", course_code: "TST100")
+    course = Course.create(name: "Financial Math", course_code: "MAT373")
     CourseStudent.create(course_id: course.id)
     assert course.course_students != 0
   end
 
   def test_courses_cannot_be_deleted_with_students_in_them
-    course = Course.create(name: "Test Class", course_code: "TES200")
+    course = Course.create(name: "Time Series", course_code: "MAT420")
     CourseStudent.create(course_id: course.id)
     refute course.destroy
     assert course.errors.full_messages.include? "Cannot delete record because dependent course students exist"
   end
 
   def test_courses_has_assignments
-    course = Course.create(name:"Test Class", course_code: "TTT101")
-    Assignment.create(name: "SQL", course_id: course.id)
+    course = Course.create(name:"Linear Regression Analysis", course_code: "MAT512")
+    Assignment.create(name: "SQL", course_id: course.id, percent_of_grade: 0.40)
     assert course.assignments != 0
   end
 
   def test_assignment_deleted_with_courses
-    tc = Course.create(name: "Tested Class", course_code: "TCE101")
-    bs = Assignment.create(name: "Bullshit", course_id: tc.id)
+    tc = Course.create(name: "Linear Algebra", course_code: "MAT351")
+    bs = Assignment.create(name: "Matrix Multiplication", course_id: tc.id, percent_of_grade: 0.15)
     tc.destroy
     refute Assignment.exists?(id: bs.id)
   end
 
   def test_lesson_can_have_pre_class_assignments
-    hw = Assignment.create(name: "validation")
+    valid = Course.create(name: "Validating stuff", course_code: "VAL111")
+    hw = Assignment.create(name: "validation", course_id: valid.id, percent_of_grade: 0.20)
     val = Lesson.create(name: "Validating", pre_class_assignment_id: hw.id)
     assert val.pre_class_assignment != 0
   end
 
   def test_assignment_responds_to_lesson
-    assign = Assignment.create(name: "validation")
+    ry = Course.create(name: "Ruby stuff", course_code: "RBY666")
+    assign = Assignment.create(name: "validation", course_id: ry.id, percent_of_grade: 0.25)
     rb = Lesson.create(name: "Ruby", pre_class_assignment_id: assign.id)
     assert Lesson.find_by(id: rb.id)
   end
@@ -158,18 +159,65 @@ class ApplicationTest < Minitest::Test
     tiy = School.create(name: "TIY")
     fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
     ruby = Course.create(name: "Course", term_id: fall.id, course_code: "FEE101")
-    assert ruby.save
+    assert ruby.persisted?
     js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE101")
-    refute js.save
+    refute js.persisted?
   end
 
   def test_course_code_has_letters_and_numbers
-    spring = Term.create(name: "Spring", starts_on: 20160301, ends_on: 20160501)
+    wrigley = School.create(name: "Wrigley Field")
+    spring = Term.create(name: "Spring", starts_on: 20160301, ends_on: 20160501, school_id: wrigley.id)
     cubs = Course.create(name: "Baseball", term_id: spring.id)
-    refute cubs.save
+    refute cubs.persisted?
     assert cubs.errors.full_messages.include? "Course code can't be blank"
   end
 
+  def test_course_instructors_are_instructors_which_are_users
+    phil = User.create(first_name: "Phil", last_name: "Nye", email: "philnye@science.edu")
+    science = CourseInstructor.create(instructor_id: phil.id)
+    assert science.instructor_id == phil.id
+  end
+
+  def test_assignments_have_grades
+    hw2 = Assignment.new
+    assert hw2.respond_to?(:assignment_grades)
+  end
+
+  def test_assignment_grades_are_associated_with_assignments
+    mutant = Course.create(name: "X-men Origins", course_code: "XMN123")
+    hw3 = Assignment.create(name: "Creating Weapon X", course_id: mutant.id, percent_of_grade: 0.90)
+    hw3_grade = AssignmentGrade.create(assignment_id: hw3.id)
+    assert hw3.id == hw3_grade.assignment_id
+  end
+
+  def test_courses_can_have_many_instructors
+    science = Course.create(name: "Advanced Science Methodology For The Smart Kids", course_code: "SCI420")
+    nye = User.create(first_name: "Phil", last_name: "Adelphia", email: "philadelphia@edu.edu")
+    sci = User.create(first_name: "Phil", last_name: "Lanthropy", email: "philanthropy@charity.com")
+    CourseInstructor.create(course_id: science.id, instructor_id: nye.id)
+    CourseInstructor.create(course_id: science.id, instructor_id: sci.id)
+    assert science.course_instructors.length > 1
+  end
+
+  def test_assignment_due_at_date_is_not_before_active_at_date
+    muggle = Course.create(name: "Killing muggles for beginners", course_code: "MUG333")
+    homework = Assignment.create(name: "First assassination", course_id: muggle.id, percent_of_grade: 0.50, due_at: 20160101, active_at: 20160101)
+    take_home = Assignment.create(name: "Kidnapping babies", course_id: muggle.id, percent_of_grade: 0.49, due_at: 20160304, active_at: 20160306)
+    refute homework.persisted?
+    refute take_home.persisted?
+    assert homework.errors.full_messages.include? "Due at must be after active date"
+    assert take_home.errors.full_messages.include? "Due at must be after active date"
+  end
+
+  def test_that_assignments_are_ordered_correctly
+    trump = Course.create(name: "How to destroy a country", course_code: "USA420")
+    win = Assignment.create(name: "Win an election with Russia's help", course_id: trump.id, percent_of_grade: 0.25, due_at: 20161108, active_at: 20160101)
+    news = Assignment.create(name: "Denouncing all free press as fake news", course_id: trump.id, percent_of_grade: 0.25, due_at: 20161108, active_at: 20160501)
+    swamp = Assignment.create(name: "Fill entire cabinet with CEO's", course_id: trump.id, percent_of_grade: 0.25, due_at: 20170120, active_at: 20160101)
+    assert trump.assignments.first == win
+    assert trump.assignments.second == news
+    assert trump.assignments.last == swamp
+  end
 
 
 
@@ -254,6 +302,7 @@ end #end test_lesson
     refute Lesson.exists?(name: less.name)
     new_course.destroy
   end
+
 #-------------------------------------------------------------
 # Explorer Player B Step 3:  Associate courses with course_instructors
 # (both directions).
@@ -519,6 +568,5 @@ end
     # new_instructor2.destroy
     # new_instructor3.destroy
   end
-
 
 end # end ApplicationTest < Minitest::Test
