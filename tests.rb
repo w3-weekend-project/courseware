@@ -39,10 +39,13 @@ class ApplicationTest < Minitest::Test
     assert school.respond_to?(:terms)
   end
 
+
 #Nancy note, added required fields to terms
 # #name: , starts_on: , ends_on: , school_id:
 # so added the starts_on and end on dates
-  def test_term_can_be_added
+
+
+  def test_term_can_be_added_to_school
     school = School.create(name: "TEST")
     Term.create(name: "Fall Term", school_id: school.id, starts_on: 20160901, ends_on: 20161231)
  #name: , starts_on: , ends_on: , school_id:
@@ -63,61 +66,57 @@ class ApplicationTest < Minitest::Test
   def test_term_cannot_be_deleted_with_courses
     term = Term.create(name: "Fall Term", school_id: "some school", starts_on: 20170901, ends_on: 20171231)
     assert term.save
-    Course.create(name: "Coding 101", term_id: term.id, course_code: "C101")
+    Course.create(name: "Coding 101", term_id: term.id, course_code: "ABC123")
     refute term.destroy
     assert term.errors.full_messages.include? "Cannot delete record because dependent courses exist"
   end
 
   def test_course_has_students
-    course = Course.create(name: "Class")
+    course = Course.create(name: "Class", course_code: "TST100")
     CourseStudent.create(course_id: course.id)
     assert course.course_students != 0
   end
 
   def test_courses_cannot_be_deleted_with_students_in_them
-    course = Course.create(name: "Test Class", course_code: "T200")
+    course = Course.create(name: "Test Class", course_code: "TES200")
     CourseStudent.create(course_id: course.id)
     refute course.destroy
     assert course.errors.full_messages.include? "Cannot delete record because dependent course students exist"
   end
 
   def test_courses_has_assignments
-    course = Course.create(name:"Test Class")
+    course = Course.create(name:"Test Class", course_code: "TTT101")
     Assignment.create(name: "SQL", course_id: course.id)
     assert course.assignments != 0
   end
 
   def test_assignment_deleted_with_courses
-    course = Course.create(name: "Tested Class", course_code: "TC101")
-    Assignment.create(name: "Bullshit", course_id: course.id)
-    course.destroy
-    refute Assignment.exists?(name: "Bullshit")
+    tc = Course.create(name: "Tested Class", course_code: "TCE101")
+    bs = Assignment.create(name: "Bullshit", course_id: tc.id)
+    tc.destroy
+    refute Assignment.exists?(id: bs.id)
   end
 
   def test_lesson_can_have_pre_class_assignments
     hw = Assignment.create(name: "validation")
-    lesson = Lesson.create(name: "Validating", pre_class_assignment_id: hw.id)
-    assert lesson.pre_class_assignment != 0
+    val = Lesson.create(name: "Validating", pre_class_assignment_id: hw.id)
+    assert val.pre_class_assignment != 0
   end
 
   def test_assignment_responds_to_lesson
     assign = Assignment.create(name: "validation")
-#nai    lesson =
-    Lesson.create(name: "Ruby", pre_class_assignment_id: assign.id)
-    assert Lesson.find_by(name: "Ruby")
+    rb = Lesson.create(name: "Ruby", pre_class_assignment_id: assign.id)
+    assert Lesson.find_by(id: rb.id)
   end
 
   def test_school_can_have_many_courses_through_terms
     tiy = School.create(name: "TIY")
     fall = Term.create(name: "Fall", starts_on: 20160901, ends_on: 20161231, school_id: tiy.id)
     winter = Term.create(name: "Winter", starts_on: 20160101, ends_on: 20160331, school_id: tiy.id)
-#nai    ruby =
-    Course.create(name: "Course", term_id: fall.id, course_code: "CO")
-#nai     js =
-    Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE")
-#nai     c =
-    Course.create(name: "C", term_id: winter.id, course_code: "CEE")
-    rails = Course.create(name: "Rails", term_id: winter.id, course_code: "BEE")
+    ruby = Course.create(name: "Course", term_id: fall.id, course_code: "CAD202")
+    js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE192")
+    c = Course.create(name: "C", term_id: winter.id, course_code: "CEE104")
+    rails = Course.create(name: "Rails", term_id: winter.id, course_code: "BEE837")
     assert tiy.terms.count > 1
     assert tiy.courses.count > 1
     assert_equal "TIY", rails.schools.first.name
@@ -130,9 +129,9 @@ class ApplicationTest < Minitest::Test
   end
 
   def test_lessons_name_is_required
-    lesson = Lesson.new
-    refute lesson.save
-    assert lesson.errors.full_messages.include? "Name can't be blank"
+    l = Lesson.new
+    refute l.save
+    assert l.errors.full_messages.include? "Name can't be blank"
   end
 
   def test_reading_requires_stuff
@@ -162,8 +161,13 @@ class ApplicationTest < Minitest::Test
     assert ruby.save
     js = Course.create(name: "JavaScript", term_id: fall.id, course_code: "FEE101")
     refute js.save
+  end
 
-
+  def test_course_code_has_letters_and_numbers
+    spring = Term.create(name: "Spring", starts_on: 20160301, ends_on: 20160501)
+    cubs = Course.create(name: "Baseball", term_id: spring.id)
+    refute cubs.save
+    assert cubs.errors.full_messages.include? "Course code can't be blank"
   end
 
 
@@ -187,8 +191,9 @@ def test_lesson_has_many_readings
   # if lesson doesn't have a "has_many :readings" you'll get an error on the assert
   # below - NoMethodError: undefined method `reading' for #<Lesson:0x007fa1fe3ae308>    assert Lesson.respond_to?("count")
   new_lesson = Lesson.create(course_id: 101, name: "Psych 101", description: "Introduction to Psychology")
-  Reading.create(order_number: 1, lesson_id: new_lesson.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
+  new_reading = Reading.create(order_number: 1, lesson_id: new_lesson.id, caption: "Freud Theory", url: "http://www.iep.utm.edu/freud/" )
   assert new_lesson.readings.count > 0
+  assert new_lesson.readings.first == new_reading
   new_lesson.destroy
 end
 
@@ -225,10 +230,10 @@ end #end test_lesson
   end
 
   def test_course_has_many_lessons
-    new_course = Course.create( name: "Course B22", course_code: "BBB022" )
-    Lesson.create(course_id: new_course.id, name: "Lesson B22a")
-    Lesson.create(course_id: new_course.id, name: "Lesson B22b")
-    assert new_course.lessons.count > 1
+    new_course = Course.create( name: "Course1", course_code: "COO100" )
+    l1 = Lesson.create(course_id: new_course.id, name: "Lesson 1")
+    l2 = Lesson.create(course_id: new_course.id, name: "Lesson 2")
+    assert new_course.lessons.count == 2
     new_course.destroy
   end
 
@@ -236,17 +241,17 @@ end #end test_lesson
     # Fails with message NoMethodError: undefined method `course
     # if this is missing:
     new_course2 = Course.create(name: "Course B23", course_code: "BBB023" )
-    Lesson.create(course_id: new_course2.id, name: "Lesson B23")
-    assert new_course2.lessons
+    le = Lesson.create(course_id: new_course2.id, name: "Lesson 1")
+    assert new_course2.lessons.first == le
     new_course2.destroy
   end
 
   def test_delete_lesson_deletes_associated_courses
     new_course = Course.create( name: "Course B24", course_code: "BBB024" )
-    Lesson.create(course_id: new_course.id, name: "Lesson B24")
+    less = Lesson.create(course_id: new_course.id, name: "Lesson B24")
     assert new_course.destroy
-    refute Course.exists?(name: "Course1")
-    refute Lesson.exists?(name: "Lesson 1")
+    refute Course.exists?(name: new_course.name)
+    refute Lesson.exists?(name: less.name)
     new_course.destroy
   end
 #-------------------------------------------------------------
@@ -499,7 +504,7 @@ end
   #-------------------------------------------------------------
   def test_Course_has_primary_instructor_in_CourseInstructor
 
-    new_course = Course.create(name: "Course 1", course_code: "A-B-4-1")
+    new_course = Course.create(name: "Course 1", course_code: "AAA000")
     new_instructor1 = User.create(first_name: "Mr.", last_name: "Freeman", email: "freeman@gmail.com")
     # new_instructor2 = User.create(first_name: "Mrs.", last_name: "Inman", email: "inman@gmail.com")
     # new_instructor3 = User.create(first_name: "Mr.", last_name: "Loser", email: "loser@gmail.com")

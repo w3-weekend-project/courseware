@@ -6,6 +6,7 @@ class Lesson < ActiveRecord::Base
 #  belongs_to :assignment, foreign_key: "in_class_assignment_id"
   belongs_to :in_class_assignment, class_name: "Assignment"
 #   chris said we wouldn't need the      foreign_key: "in_class_assignment_id"
+
   belongs_to :course
   has_many   :readings
 # belongs to does two things, we have a course_id and we are using methods class
