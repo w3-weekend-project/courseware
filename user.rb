@@ -1,9 +1,27 @@
 class User < ActiveRecord::Base
 
-  has_many :courses,       class_name: "CourseStudent",
-                           foreign_key: "student_id"
-  has_many :instuctors,    class_name: "CourseInstuctor",
-                           foreign_key: "instructor_id"
+# This has many definition returns the course_instructors table
+#   has_many :courses,             class_name: "CourseInstructor",
+#                                  foreign_key: "instructor_id"
+#           new_instructor1.courses
+# We want the actual courses, so how to get them without breaking the use of
+# courses below...
+# try using what Chris showed about primary instructor.... source....
+# later try changing the student course relationship also if time...
+
+  has_many :course_instructors,    class_name: "CourseInstructor",
+                                   foreign_key: "instructor_id"
+  has_many :taught_courses,      through: :course_instructors,
+                                 foreign_key: "instructor_id",
+                                 source: :course
+
+
+   has_many :courses,       class_name: "CourseStudent",
+                            foreign_key: "student_id"
+
+
+
+
 
   validates :first_name, presence: true
   validates :last_name, presence: true
