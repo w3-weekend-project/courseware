@@ -10,7 +10,13 @@ class Course < ActiveRecord::Base
   has_many :readings, through: :lessons
   has_many :students, through: :course_students, foreign_key: "student_id"
   has_many :instructors, through: :course_instructors, foreign_key: "instructor_id"
-  has_one  :primary_instructor, -> {  where(primary: true) }, class_name: "CourseInstructor"
+  has_one  :join_for_primary_instructor_course, -> {  where(primary: true) }, class_name: "CourseInstructor"
+  has_one  :primary_instructor, through: :join_for_primary_instructor_course,
+                                source: :instructor
+
+  #has_many :sorted_students,  -> { order 'users.last_name, users.first_name' }
+  #
+  # -> { order 'users.last_name, users.first_name' }, through: :course_students, foreign_key: "student_id"
 
 
   validates :name, presence: true
